@@ -280,6 +280,7 @@ public:
 		return elementType;
 	}
 	virtual int16_t getElementDamageValue() const override;
+	int16_t getElementDamageValue(const std::shared_ptr<Item> &item) const;
 
 private:
 	bool getSkillType(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, skills_t &skill, uint32_t &skillpoint) const override;
@@ -304,6 +305,7 @@ public:
 		return elementType;
 	}
 	virtual int16_t getElementDamageValue() const override;
+	int16_t getElementDamageValue(const std::shared_ptr<Item> &item) const;
 
 private:
 	bool getSkillType(const std::shared_ptr<Player> &player, const std::shared_ptr<Item> &item, skills_t &skill, uint32_t &skillpoint) const override;
@@ -327,6 +329,7 @@ public:
 		return params.combatType;
 	}
 	virtual int16_t getElementDamageValue() const override;
+	int16_t getElementDamageValue(const std::shared_ptr<Item> &item) const;
 	void setMinChange(int32_t change) {
 		minChange = change;
 	}

@@ -604,7 +604,14 @@ int32_t WeaponMelee::getElementDamage(const std::shared_ptr<Player> &player, con
 	}
 
 	const int32_t attackSkill = player->getWeaponSkill(item);
-	const int32_t attackValue = elementDamage;
+	// Check for weapon leveling elemental bonus
+	int32_t attackValue = elementDamage;
+	if (item) {
+		const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+		if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+			attackValue += static_cast<int32_t>(elementalBonus->getAttribute<int64_t>());
+		}
+	}
 	const float attackFactor = player->getAttackFactor();
 	const uint32_t level = player->getLevel();
 
@@ -618,10 +625,21 @@ int16_t WeaponMelee::getElementDamageValue() const {
 	return elementDamage;
 }
 
+int16_t WeaponMelee::getElementDamageValue(const std::shared_ptr<Item> &item) const {
+	int16_t baseDamage = elementDamage;
+	if (item) {
+		const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+		if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+			baseDamage += static_cast<int16_t>(elementalBonus->getAttribute<int64_t>());
+		}
+	}
+	return baseDamage;
+}
+
 int32_t WeaponMelee::getWeaponDamage(const std::shared_ptr<Player> &player, const std::shared_ptr<Creature> &, const std::shared_ptr<Item> &item, bool maxDamage /*= false*/) const {
 	const int32_t attackSkill = player->getWeaponSkill(item);
 	const int32_t physicalAttack = std::max<int32_t>(0, item->getAttack());
-	const int32_t elementalAttack = getElementDamageValue();
+	const int32_t elementalAttack = getElementDamageValue(item);
 	const int32_t combinedAttack = physicalAttack + elementalAttack;
 
 	const float attackFactor = player->getAttackFactor();
@@ -841,6 +859,13 @@ int32_t WeaponDistance::getElementDamage(const std::shared_ptr<Player> &player, 
 	}
 
 	int32_t attackValue = elementDamage;
+	// Check for weapon leveling elemental bonus
+	if (item) {
+		const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+		if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+			attackValue += static_cast<int32_t>(elementalBonus->getAttribute<int64_t>());
+		}
+	}
 	if (item && player && item->getWeaponType() == WEAPON_AMMO) {
 		const auto &weapon = player->getWeapon(true);
 		if (weapon) {
@@ -868,6 +893,17 @@ int32_t WeaponDistance::getElementDamage(const std::shared_ptr<Player> &player, 
 
 int16_t WeaponDistance::getElementDamageValue() const {
 	return elementDamage;
+}
+
+int16_t WeaponDistance::getElementDamageValue(const std::shared_ptr<Item> &item) const {
+	int16_t baseDamage = elementDamage;
+	if (item) {
+		const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+		if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+			baseDamage += static_cast<int16_t>(elementalBonus->getAttribute<int64_t>());
+		}
+	}
+	return baseDamage;
 }
 
 int32_t WeaponDistance::getWeaponDamage(const std::shared_ptr<Player> &player, const std::shared_ptr<Creature> &target, const std::shared_ptr<Item> &item, bool maxDamage /*= false*/) const {
