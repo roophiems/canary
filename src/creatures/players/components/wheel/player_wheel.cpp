@@ -1705,11 +1705,16 @@ void PlayerWheel::saveRevealedGems() const {
 }
 
 bool PlayerWheel::scrollAcquired(const std::string &scrollName) {
-	auto it = std::ranges::find_if(m_unlockedScrolls, [&scrollName](const PromotionScroll &promotionScroll) {
-		return scrollName == promotionScroll.name;
-	});
+	// Count how many times this scroll has been used
+	int scrollCount = 0;
+	for (const auto &scroll : m_unlockedScrolls) {
+		if (scroll.name == scrollName) {
+			scrollCount++;
+		}
+	}
 
-	return it != m_unlockedScrolls.end();
+	// Allow up to 10 uses per scroll type
+	return scrollCount >= 10;
 }
 
 bool PlayerWheel::unlockScroll(const std::string &scrollName) {
@@ -1737,8 +1742,22 @@ void PlayerWheel::loadKVScrolls() {
 
 	for (const auto &[itemId, name, extraPoints] : WheelOfDestinyPromotionScrolls) {
 		const auto scrollValue = scrollKv->get(name);
-		if (scrollValue && scrollValue->get<bool>()) {
-			m_unlockedScrolls.emplace_back(itemId, name, extraPoints);
+		if (scrollValue) {
+			// Load count of scrolls used (default to 1 for backward compatibility with boolean)
+			int scrollCount = 1;
+			const auto &variant = scrollValue->getVariant();
+			if (std::holds_alternative<IntType>(variant)) {
+				scrollCount = scrollValue->get<IntType>();
+			} else if (std::holds_alternative<BooleanType>(variant) && scrollValue->get<BooleanType>()) {
+				scrollCount = 1; // Backward compatibility
+			} else {
+				continue;
+			}
+			
+			// Add the scroll multiple times based on count
+			for (int i = 0; i < scrollCount; ++i) {
+				m_unlockedScrolls.emplace_back(itemId, name, extraPoints);
+			}
 		}
 	}
 }
@@ -1749,8 +1768,15 @@ void PlayerWheel::saveKVScrolls() const {
 		return;
 	}
 
+	// Count scrolls by name and save the count
+	std::map<std::string, int> scrollCounts;
 	for (const auto &[itemId, name, extraPoints] : m_unlockedScrolls) {
-		scrollKv->set(name, true);
+		scrollCounts[name]++;
+	}
+	
+	// Save counts to KV storage
+	for (const auto &[scrollName, count] : scrollCounts) {
+		scrollKv->set(scrollName, count);
 	}
 }
 
