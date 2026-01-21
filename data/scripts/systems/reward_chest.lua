@@ -3,7 +3,7 @@ local bossDeath = CreatureEvent("BossDeath")
 -- Configuration
 local PROMOTION_SCROLL_CONFIG = {
 	-- Enable/disable logging
-	enableLogging = true,
+	enableLogging = false,
 }
 
 -- Helper function to conditionally log info
