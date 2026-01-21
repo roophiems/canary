@@ -7,7 +7,12 @@ function templeScroll.onUse(player, item, fromPosition, target, toPosition, isHo
 		fromPosition:sendMagicEffect(CONST_ME_TELEPORT)
 		player:teleportTo(player:getTown():getTemplePosition())
 		player:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-		item:remove()
+		-- Handle stackable items: remove 1 instead of the whole stack
+		if item:isStackable() and item:getCount() > 1 then
+			item:setCount(item:getCount() - 1)
+		else
+			item:remove()
+		end
 	else
 		player:sendCancelMessage("You can't use this when you're in a fight.")
 		fromPosition:sendMagicEffect(CONST_ME_POFF)
