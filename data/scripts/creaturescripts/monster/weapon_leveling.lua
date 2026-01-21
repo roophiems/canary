@@ -5,6 +5,9 @@ local weaponLeveling = EventCallback("WeaponLeveling")
 
 -- Configuration
 local WEAPON_LEVELING_CONFIG = {
+    -- Enable/disable logging
+    enableLogging = false,
+    
     -- Base experience for level 1
     baseExp = 1000,
     
@@ -48,22 +51,29 @@ local function getLevelFromExp(exp)
     return level
 end
 
+-- Helper function to conditionally log
+local function logInfo(message, ...)
+    if WEAPON_LEVELING_CONFIG.enableLogging then
+        logger.info(message, ...)
+    end
+end
+
 -- Helper function to check if item is a levelable weapon
 local function isLevelableWeapon(item)
     if not item then
-        logger.info("[WeaponLeveling] isLevelableWeapon: item is nil")
+        logInfo("[WeaponLeveling] isLevelableWeapon: item is nil")
         return false
     end
     
     local itemType = item:getType()
     if not itemType then
-        logger.info("[WeaponLeveling] isLevelableWeapon: itemType is nil for item {}", item:getName())
+        logInfo("[WeaponLeveling] isLevelableWeapon: itemType is nil for item {}", item:getName())
         return false
     end
     
     local weaponType = itemType:getWeaponType()
     local isLevelable = WEAPON_LEVELING_CONFIG.weaponTypes[weaponType] or false
-    logger.info("[WeaponLeveling] isLevelableWeapon: item {} has weaponType {}, isLevelable: {}", 
+    logInfo("[WeaponLeveling] isLevelableWeapon: item {} has weaponType {}, isLevelable: {}", 
         item:getName(), 
         weaponType, 
         isLevelable
@@ -162,27 +172,27 @@ end
 
 -- Helper function to add experience to weapon
 local function addWeaponExp(weapon, exp)
-    logger.info("[WeaponLeveling] addWeaponExp: Adding {} exp to weapon {}", exp, weapon:getName())
+    logInfo("[WeaponLeveling] addWeaponExp: Adding {} exp to weapon {}", exp, weapon:getName())
     local currentExp = weapon:getCustomAttribute("weaponExp") or 0
     local currentLevel = getLevelFromExp(currentExp)
-    logger.info("[WeaponLeveling] addWeaponExp: Current exp: {}, current level: {}", currentExp, currentLevel)
+    logInfo("[WeaponLeveling] addWeaponExp: Current exp: {}, current level: {}", currentExp, currentLevel)
     
     local newExp = currentExp + exp
     weapon:setCustomAttribute("weaponExp", newExp)
-    logger.info("[WeaponLeveling] addWeaponExp: Set new exp to {}", newExp)
+    logInfo("[WeaponLeveling] addWeaponExp: Set new exp to {}", newExp)
     
     local newLevel = getLevelFromExp(newExp)
-    logger.info("[WeaponLeveling] addWeaponExp: New level calculated: {}", newLevel)
+    logInfo("[WeaponLeveling] addWeaponExp: New level calculated: {}", newLevel)
     
     if newLevel > currentLevel then
         -- Level up!
-        logger.info("[WeaponLeveling] addWeaponExp: Level up detected! {} -> {}", currentLevel, newLevel)
+        logInfo("[WeaponLeveling] addWeaponExp: Level up detected! {} -> {}", currentLevel, newLevel)
         weapon:setCustomAttribute("weaponLevel", newLevel)
         updateWeaponStats(weapon, newLevel)
         return true, newLevel
     else
         -- Update description even if no level up (to show new percentage)
-        logger.info("[WeaponLeveling] addWeaponExp: No level up, updating description")
+        logInfo("[WeaponLeveling] addWeaponExp: No level up, updating description")
         updateWeaponDescription(weapon)
     end
     
@@ -191,7 +201,7 @@ end
 
 -- Event callback: triggered when player gains experience
 function weaponLeveling.playerOnGainExperience(player, target, exp, rawExp)
-    logger.info("[WeaponLeveling] playerOnGainExperience called: player={}, target={}, exp={}, rawExp={}", 
+    logInfo("[WeaponLeveling] playerOnGainExperience called: player={}, target={}, exp={}, rawExp={}", 
         player and player:getName() or "nil",
         target and target:getName() or "nil",
         exp,
@@ -200,50 +210,50 @@ function weaponLeveling.playerOnGainExperience(player, target, exp, rawExp)
     
     -- Only process if target is a monster
     if not target then
-        logger.info("[WeaponLeveling] Early return: target is nil")
+        logInfo("[WeaponLeveling] Early return: target is nil")
         return
     end
     
     if not target:isMonster() then
-        logger.info("[WeaponLeveling] Early return: target {} is not a monster (type: {})", 
+        logInfo("[WeaponLeveling] Early return: target {} is not a monster (type: {})", 
             target:getName(), 
             target:getType() and "creature" or "unknown"
         )
         return
     end
     
-    logger.info("[WeaponLeveling] Target {} is a monster, continuing", target:getName())
+    logInfo("[WeaponLeveling] Target {} is a monster, continuing", target:getName())
 
     -- Check weapon in LEFT HAND ONLY
     local weapon = player:getSlotItem(CONST_SLOT_LEFT)
     
     if not weapon then
-        logger.info("[WeaponLeveling] Early return: No weapon in left hand slot")
+        logInfo("[WeaponLeveling] Early return: No weapon in left hand slot")
         return
     end
     
-    logger.info("[WeaponLeveling] Found weapon in left hand: {}", weapon:getName())
+    logInfo("[WeaponLeveling] Found weapon in left hand: {}", weapon:getName())
     
     if not isLevelableWeapon(weapon) then
-        logger.info("[WeaponLeveling] Early return: Weapon {} is not levelable", weapon:getName())
+        logInfo("[WeaponLeveling] Early return: Weapon {} is not levelable", weapon:getName())
         return
     end
     
-    logger.info("[WeaponLeveling] Weapon {} is levelable, proceeding", weapon:getName())
+    logInfo("[WeaponLeveling] Weapon {} is levelable, proceeding", weapon:getName())
     
     -- Get monster experience value (90% of raw exp)
     local weaponExp = math.floor(rawExp * 0.9)
-    logger.info("[WeaponLeveling] Calculated weapon exp: {} (from raw exp: {})", weaponExp, rawExp)
+    logInfo("[WeaponLeveling] Calculated weapon exp: {} (from raw exp: {})", weaponExp, rawExp)
     
     if weaponExp <= 0 then
-        logger.info("[WeaponLeveling] Early return: weaponExp is {} (too low)", weaponExp)
+        logInfo("[WeaponLeveling] Early return: weaponExp is {} (too low)", weaponExp)
         return
     end
     
     -- Log experience award
     local currentExp = weapon:getCustomAttribute("weaponExp") or 0
     local currentLevel = getLevelFromExp(currentExp)
-    logger.info("[WeaponLeveling] Player {} killed {} (raw exp: {}), awarded {} exp to weapon {} (current: {} exp, level {})", 
+    logInfo("[WeaponLeveling] Player {} killed {} (raw exp: {}), awarded {} exp to weapon {} (current: {} exp, level {})", 
         player:getName(), 
         target:getName(), 
         rawExp, 
@@ -258,7 +268,7 @@ function weaponLeveling.playerOnGainExperience(player, target, exp, rawExp)
     
     if leveledUp then
         local newExp = weapon:getCustomAttribute("weaponExp") or 0
-        logger.info("[WeaponLeveling] Weapon {} leveled up to level {}! New exp: {}", 
+        logInfo("[WeaponLeveling] Weapon {} leveled up to level {}! New exp: {}", 
             weapon:getName(), 
             level, 
             newExp
@@ -267,9 +277,9 @@ function weaponLeveling.playerOnGainExperience(player, target, exp, rawExp)
             string.format("Your %s has reached level %d!", weapon:getName(), level))
         player:getPosition():sendMagicEffect(CONST_ME_LEVELUP)
     else
-        logger.info("[WeaponLeveling] No level up, weapon {} remains at level {}", weapon:getName(), level)
+        logInfo("[WeaponLeveling] No level up, weapon {} remains at level {}", weapon:getName(), level)
     end
 end
 
 weaponLeveling:register()
-logger.info("[WeaponLeveling] Script registered successfully")
+logInfo("[WeaponLeveling] Script registered successfully")
