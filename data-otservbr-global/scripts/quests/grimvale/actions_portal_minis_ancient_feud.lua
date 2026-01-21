@@ -3,7 +3,6 @@ local config = {
 		teleportPosition = { x = 33123, y = 32239, z = 12 },
 		bossName = "Yirkas Blue Scales",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33154, 32246, 12),
 		bossPosition = Position(33154, 32252, 12),
@@ -17,7 +16,6 @@ local config = {
 		teleportPosition = { x = 33131, y = 32252, z = 12 },
 		bossName = "Srezz Yellow Eyes",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33120, 32278, 12),
 		bossPosition = Position(33122, 32285, 12),
@@ -31,7 +29,6 @@ local config = {
 		teleportPosition = { x = 33123, y = 32265, z = 12 },
 		bossName = "Utua Stone Sting",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33087, 32240, 12),
 		bossPosition = Position(33087, 32245, 12),
@@ -45,7 +42,6 @@ local config = {
 		teleportPosition = { x = 33114, y = 32252, z = 12 },
 		bossName = "Katex Blood Tongue",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33149, 32283, 12),
 		bossPosition = Position(33152, 32289, 12),
@@ -105,7 +101,8 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			if not creature:canFightBoss(value.bossName) then
 				creature:teleportTo(fromPosition, true)
 				creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. value.timeToFightAgain .. " hours to face " .. value.bossName .. " again!")
+				local timeToFightAgainHours = configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN) / 3600
+				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. timeToFightAgainHours .. " hours to face " .. value.bossName .. " again!")
 				return true
 			end
 			spec:removeMonsters()
@@ -115,7 +112,7 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			end
 			creature:teleportTo(value.destination)
 			creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-			creature:setBossCooldown(value.bossName, os.time() + value.timeToFightAgain * 3600)
+			creature:setBossCooldown(value.bossName, os.time() + configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN))
 			addEvent(function()
 				spec:clearCreaturesCache()
 				spec:setOnlyPlayer(true)

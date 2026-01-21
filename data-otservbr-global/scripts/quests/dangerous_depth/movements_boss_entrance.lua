@@ -1,5 +1,4 @@
 local bossEntrance = MoveEvent()
-local timeToFightAgain = 10 -- hours
 
 function bossEntrance.onStepIn(creature, item, position, fromPosition, toPosition)
 	local player = creature:getPlayer()
@@ -44,7 +43,7 @@ function bossEntrance.onStepIn(creature, item, position, fromPosition, toPositio
 
 	player:teleportTo(destination)
 	player:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-	player:setBossCooldown(bossName, os.time() + timeToFightAgain * 3600)
+	player:setBossCooldown(bossName, os.time() + configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN))
 	return true
 end
 

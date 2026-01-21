@@ -3,7 +3,6 @@ local config = {
 		teleportPosition = { x = 33886, y = 31477, z = 6 },
 		bossName = "Neferi The Spy",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33871, 31547, 8),
 		bossPosition = Position(33871, 31552, 8),
@@ -17,7 +16,6 @@ local config = {
 		teleportPosition = { x = 33883, y = 31467, z = 9 },
 		bossName = "Sister Hetai",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33833, 31490, 9),
 		bossPosition = Position(33833, 31496, 9),
@@ -31,7 +29,6 @@ local config = {
 		teleportPosition = { x = 33819, y = 31773, z = 10 },
 		bossName = "Amenef the Burning",
 		requiredLevel = 250,
-		timeToFightAgain = 10, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33849, 31782, 10),
 		bossPosition = Position(33849, 31787, 10),
@@ -87,7 +84,8 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			if not creature:canFightBoss(value.bossName) then
 				creature:teleportTo(fromPosition, true)
 				creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. value.timeToFightAgain .. " hours to face " .. value.bossName .. " again!")
+				local timeToFightAgainHours = configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN) / 3600
+				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. timeToFightAgainHours .. " hours to face " .. value.bossName .. " again!")
 				return true
 			end
 			spec:removeMonsters()
@@ -97,7 +95,7 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			end
 			creature:teleportTo(value.destination)
 			creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-			creature:setBossCooldown(value.bossName, os.time() + value.timeToFightAgain * 3600)
+			creature:setBossCooldown(value.bossName, os.time() + configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN))
 			addEvent(function()
 				spec:clearCreaturesCache()
 				spec:setOnlyPlayer(true)

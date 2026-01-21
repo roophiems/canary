@@ -33,7 +33,6 @@ local config = {
 			return true
 		end,
 	},
-	timeToFightAgain = 20 * 60 * 60, -- 20 hours
 	requiredLevel = 250,
 	playerPositions = {
 		{ pos = Position(33736, 31537, 14), teleport = Position(33707, 31545, 14), effect = CONST_ME_TELEPORT },
