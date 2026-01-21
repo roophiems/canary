@@ -30,7 +30,8 @@ function canChain(creature, target)
 		end
 
 		-- Allow if target is marked (has skull)
-		if casterPlayer:getSkullClient(target) ~= SKULL_NONE then
+		local targetSkull = target:getSkull()
+		if targetSkull and targetSkull ~= SKULL_NONE then
 			return true
 		end
 
