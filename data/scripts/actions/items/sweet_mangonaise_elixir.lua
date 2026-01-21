@@ -49,5 +49,6 @@ function sweetMangonaiseElixir.onUse(player, item, fromPosition, target, toPosit
 	return true
 end
 
-sweetMangonaiseElixir:id(11588)
-sweetMangonaiseElixir:register()
+-- sweetMangonaiseElixir:id(11588)
+-- Disabled: Using custom stamina reset version instead (sweet_mangonaise_elixir_custom.lua)
+-- sweetMangonaiseElixir:register()
