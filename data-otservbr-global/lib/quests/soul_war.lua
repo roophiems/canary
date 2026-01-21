@@ -402,6 +402,7 @@ SoulWarQuest = {
 				{ name = "Aspect of Power", pos = { x = 33710, y = 31635, z = 14 } },
 			},
 			requiredLevel = 250,
+			timeToFightAgain = 20 * 60 * 60, -- 20 hours
 			playerPositions = {
 				{ pos = Position(33676, 31634, 14), teleport = Position(33710, 31639, 14), effect = CONST_ME_TELEPORT },
 				{ pos = Position(33677, 31634, 14), teleport = Position(33710, 31639, 14), effect = CONST_ME_TELEPORT },
