@@ -1,7 +1,6 @@
 local config = {
 	bossName = "Brain Head",
 	requiredLevel = 250,
-	timeToFightAgain = 10, -- In hour
 	destination = Position(31963, 32324, 10),
 	exitPosition = Position(31971, 32325, 10),
 }
@@ -130,7 +129,7 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 	end
 	player:teleportTo(config.destination)
 	player:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-	player:setBossCooldown(config.bossName, os.time() + config.timeToFightAgain * 3600)
+	player:setBossCooldown(config.bossName, os.time() + configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN))
 	player:sendBosstiaryCooldownTimer()
 end
 

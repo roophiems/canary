@@ -3,7 +3,6 @@ local config = {
 		name = "spirit of fertility",
 		position = Position(33625, 31021, 14),
 	},
-	timeToFightAgain = 20 * 60 * 60,
 	playerPositions = {
 		{ pos = Position(33583, 30993, 14), teleport = Position(33592, 31017, 14) },
 		{ pos = Position(33582, 30993, 14), teleport = Position(33574, 31017, 14) },

@@ -1,6 +1,24 @@
 {
 	"events": [
 		{
+			"name": "Double Bestiary Week",
+			"startdate": "01/22/2026",
+			"enddate": "01/25/2026",
+			"ingame": {
+				"doublebestiary": true
+			},
+			"description": "Double bestiary progress when defeating monsters until the end of the week.",
+			"colors": {
+				"colordark": "#3a4f2a",
+				"colorlight": "#4f713a"
+			},
+			"details": {
+				"displaypriority": 5,
+				"isseasonal": 0,
+				"specialevent": 1
+			}
+		},
+		{
 			"name": "Forge Time",
 			"startdate": "11/12/2024",
 			"enddate": "11/17/2024",

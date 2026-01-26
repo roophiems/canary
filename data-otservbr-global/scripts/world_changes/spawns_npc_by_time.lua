@@ -13,12 +13,6 @@ local npcSpawns = {
 		despawnPeriod = LIGHT_STATE_SUNRISE,
 		position = Position(33504, 32222, 7),
 	},
-	{
-		name = "Valindara",
-		spawnPeriod = LIGHT_STATE_SUNRISE,
-		despawnPeriod = LIGHT_STATE_SUNSET,
-		position = Position(33504, 32222, 7),
-	},
 }
 
 local spawnsNpcByTime = GlobalEvent("SpawnsNpcByTime")

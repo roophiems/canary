@@ -3,7 +3,6 @@ local config = {
 		teleportPosition = { x = 33491, y = 31398, z = 8 },
 		bossName = "Irgix the Flimsy",
 		requiredLevel = 250,
-		timeToFightAgain = 20, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33467, 31405, 8),
 		bossPosition = Position(33467, 31399, 8),
@@ -17,7 +16,6 @@ local config = {
 		teleportPosition = { x = 33566, y = 31475, z = 8 },
 		bossName = "Unaz the Mean",
 		requiredLevel = 250,
-		timeToFightAgain = 20, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33576, 31494, 8),
 		bossPosition = Position(33565, 31496, 8),
@@ -31,7 +29,6 @@ local config = {
 		teleportPosition = { x = 33509, y = 31450, z = 9 },
 		bossName = "Vok The Freakish",
 		requiredLevel = 250,
-		timeToFightAgain = 20, -- In hour
 		timeToDefeat = 10, -- In minutes
 		destination = Position(33508, 31494, 9),
 		bossPosition = Position(33508, 31486, 9),
@@ -87,7 +84,8 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			if not creature:canFightBoss(value.bossName) then
 				creature:teleportTo(fromPosition, true)
 				creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. value.timeToFightAgain .. " hours to face " .. value.bossName .. " again!")
+				local timeToFightAgainHours = configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN) / 3600
+				creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have to wait " .. timeToFightAgainHours .. " hours to face " .. value.bossName .. " again!")
 				return true
 			end
 			spec:removeMonsters()
@@ -97,7 +95,7 @@ function teleportBoss.onStepIn(creature, item, position, fromPosition)
 			end
 			creature:teleportTo(value.destination)
 			creature:getPosition():sendMagicEffect(CONST_ME_TELEPORT)
-			creature:setBossCooldown(value.bossName, os.time() + value.timeToFightAgain * 3600)
+			creature:setBossCooldown(value.bossName, os.time() + configManager.getNumber(configKeys.BOSS_DEFAULT_TIME_TO_FIGHT_AGAIN))
 			creature:sendBosstiaryCooldownTimer()
 			addEvent(function()
 				spec:clearCreaturesCache()

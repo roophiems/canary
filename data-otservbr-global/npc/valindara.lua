@@ -213,6 +213,7 @@ npcConfig.shop = {
 	{ itemName = "wild growth rune", clientId = 3156, buy = 160 },
 	{ itemName = "wood cape", clientId = 3575, sell = 5000 },
 	{ itemName = "wooden spellbook", clientId = 25699, sell = 12000 },
+	{ itemName = "temple teleport scroll", clientId = 25718, buy = 150000 },
 }
 
 -- On buy npc shop message

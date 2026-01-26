@@ -1,5 +1,175 @@
 local bossDeath = CreatureEvent("BossDeath")
 
+-- Configuration
+local PROMOTION_SCROLL_CONFIG = {
+	-- Enable/disable logging
+	enableLogging = false,
+}
+
+-- Helper function to conditionally log info
+local function logInfo(message, ...)
+	if PROMOTION_SCROLL_CONFIG.enableLogging then
+		logger.info(message, ...)
+	end
+end
+
+-- Helper function to conditionally log warnings
+local function logWarn(message, ...)
+	if PROMOTION_SCROLL_CONFIG.enableLogging then
+		logger.warn(message, ...)
+	end
+end
+
+-- Promotion scroll configuration
+local promotionScrolls = {
+	[43946] = { name = "abridged", points = 3, itemName = "abridged promotion scroll", chance = 15 }, -- 1.5%
+	[43947] = { name = "basic", points = 5, itemName = "basic promotion scroll", chance = 12 }, -- 1.2%
+	[43948] = { name = "revised", points = 9, itemName = "revised promotion scroll", chance = 10 }, -- 1%
+	[43949] = { name = "extended", points = 13, itemName = "extended promotion scroll", chance = 8 }, -- 0.8%
+	[43950] = { name = "advanced", points = 20, itemName = "advanced promotion scroll", chance = 5 }, -- 0.5%
+}
+
+-- Boss categories based on health, complexity, and damage potential
+-- Organized into 5 tiers: Abridged (lowest) -> Basic -> Revised -> Extended -> Advanced (highest, exclusive)
+local bossCategories = {
+	-- Tier 1: Abridged (8,500 - 30,000 HP) - Very easy bosses, low complexity
+	abridged = {
+		scrollId = 43946,
+		minHealth = 8500,
+		maxHealth = 30000,
+		bosses = {
+			"Ancient Lion Knight", "Ancient Lion Warlock", "Ancient Lion Archer", "Fallen Challenger",
+			"Zorvorax", "Tazhadur", "Kalyassa", "Preceptor Lazare",
+			"Brokul", "Kesar", "The Sandking Fake", "Wine Cask"
+		}
+	},
+	
+	-- Tier 2: Basic (30,000 - 80,000 HP) - Easy-medium bosses, moderate complexity
+	basic = {
+		scrollId = 43947,
+		minHealth = 30000,
+		maxHealth = 80000,
+		bosses = {
+			"Gelidrazah the Frozen", "Grand Canon Dominus", "Grand Chaplain Gaunder", 
+			"Grand Commander Soeren", "Thawing Dragon Lord", "Faceless Bane", 
+			"Grand Master Oberon", "The Sandking", "Last Planegazer", "Eliz the Unyielding",
+			"Malkhar Deathbringer", "Mezlon the Defiler", "The Sinister Hermit Dirty", 
+			"The Sinister Hermit Clean", "The Armored Voidborn"
+		}
+	},
+	
+	-- Tier 3: Revised (80,000 - 200,000 HP) - Medium-hard bosses, higher complexity
+	revised = {
+		scrollId = 43948,
+		minHealth = 80000,
+		maxHealth = 200000,
+		bosses = {
+			"Drume", "Ravenous Hunger", "Essence of Malice", "Gnomevil", "The Unarmored Voidborn",
+			"The Corruptor of Souls", "The Souldespoiler", "The Remorseless Corruptor", "The False God",
+			"Gorzindel", "Ghulosh", "Lokathmor", "Mazzinor", "Alptramun", "Malofur Mangrinder",
+			"Izcandar the Banished", "Plagueroot", "Maxxenius"
+		}
+	},
+	
+	-- Tier 4: Extended (200,000 - 500,000 HP) - Hard bosses, high complexity and damage
+	extended = {
+		scrollId = 43949,
+		minHealth = 200000,
+		maxHealth = 500000,
+		bosses = {
+			"The Source of Corruption", "The Scourge of Oblivion", "The Nightmare Beast"
+		}
+	},
+	
+	-- Tier 5: Advanced (exclusive to Soul War and Rotten Blood) - Highest tier, unique quest lines
+	soulwar = {
+		scrollId = 43950,
+		bosses = {
+			"Goshnar's Malice", "Goshnar's Hatred", "Goshnar's Spite", "Goshnar's Cruelty", 
+			"Goshnar's Greed", "Goshnar's Megalomania"
+		}
+	},
+	
+	rottenblood = {
+		scrollId = 43950,
+		bosses = {
+			"Murcion", "Chagorz", "Ichgahal", "Vemiath", "Bakragore"
+		}
+	}
+}
+
+-- Helper function to determine which scroll to roll for
+local function getPromotionScrollForBoss(creature, monsterType)
+	local bossName = creature:getName()
+	local bossHealth = creature:getMaxHealth()
+	local scrollToAdd = nil
+	local matchedCategory = nil
+	
+	logInfo("[BossDeath] Determining promotion scroll for boss: {} (HP: {})", bossName, bossHealth)
+	
+	-- Check specific boss categories first (Soul War and Rotten Blood)
+	for categoryName, category in pairs(bossCategories) do
+		if category.bosses then
+			for _, boss in ipairs(category.bosses) do
+				if boss == bossName then
+					scrollToAdd = category.scrollId
+					matchedCategory = categoryName
+					logInfo("[BossDeath] Boss {} matched specific category '{}', selected scroll: {} (chance: {}/1000)", 
+						bossName, categoryName, promotionScrolls[scrollToAdd].name, promotionScrolls[scrollToAdd].chance)
+					break
+				end
+			end
+		end
+		if scrollToAdd then
+			break
+		end
+	end
+	
+	-- If not found in specific categories, check by health range
+	if not scrollToAdd then
+		for categoryName, category in pairs(bossCategories) do
+			if category.minHealth and category.maxHealth then
+				if bossHealth >= category.minHealth and bossHealth <= category.maxHealth then
+					scrollToAdd = category.scrollId
+					matchedCategory = categoryName
+					logInfo("[BossDeath] Boss {} matched health range category '{}' (HP: {}), selected scroll: {} (chance: {}/1000)", 
+						bossName, categoryName, bossHealth, promotionScrolls[scrollToAdd].name, promotionScrolls[scrollToAdd].chance)
+					break
+				end
+			end
+		end
+	end
+	
+	-- If still no scroll determined, default based on health ranges
+	if not scrollToAdd then
+		if bossHealth >= 8500 and bossHealth <= 30000 then
+			scrollToAdd = 43946 -- abridged
+			matchedCategory = "default-abridged"
+		elseif bossHealth > 30000 and bossHealth <= 80000 then
+			scrollToAdd = 43947 -- basic
+			matchedCategory = "default-basic"
+		elseif bossHealth > 80000 and bossHealth <= 200000 then
+			scrollToAdd = 43948 -- revised
+			matchedCategory = "default-revised"
+		elseif bossHealth > 200000 and bossHealth <= 500000 then
+			scrollToAdd = 43949 -- extended
+			matchedCategory = "default-extended"
+		elseif bossHealth > 500000 then
+			-- Very high HP bosses default to extended (advanced is exclusive to Soul War/Rotten Blood)
+			scrollToAdd = 43949 -- extended
+			matchedCategory = "default-extended-high"
+		else
+			-- Fallback for bosses below 8500 HP (shouldn't happen for reward bosses)
+			scrollToAdd = 43946 -- abridged
+			matchedCategory = "default-abridged-fallback"
+		end
+		logInfo("[BossDeath] Boss {} using default category '{}' (HP: {}), selected scroll: {} (chance: {}/1000)", 
+			bossName, matchedCategory, bossHealth, promotionScrolls[scrollToAdd].name, promotionScrolls[scrollToAdd].chance)
+	end
+	
+	return scrollToAdd
+end
+
 function bossDeath.onDeath(creature, corpse, killer, mostDamageKiller, lastHitUnjustified, mostDamageUnjustified)
 	-- Deny summons and players
 	if not creature or creature:isPlayer() or creature:getMaster() then
@@ -63,8 +233,30 @@ function bossDeath.onDeath(creature, corpse, killer, mostDamageKiller, lastHitUn
 		end)
 
 		local expectedScore = 1 / participants
+		
+		-- Roll for promotion scroll once per boss (before processing players)
+		local scrollRolled = false
+		local scrollToAddToLoot = nil
+		local scrollToAdd = getPromotionScrollForBoss(creature, monsterType)
+		if scrollToAdd then
+			local chance = promotionScrolls[scrollToAdd].chance
+			local roll = math.random(1000)
+			logInfo("[BossDeath] Rolling for {} scroll drop on {}: rolled {} (needed <= {})", 
+				promotionScrolls[scrollToAdd].name, creature:getName(), roll, chance)
+			
+			if roll <= chance then
+				scrollToAddToLoot = scrollToAdd
+				scrollRolled = true
+				logInfo("[BossDeath] Roll SUCCESS! Promotion scroll {} dropped for boss {}", 
+					promotionScrolls[scrollToAdd].name, creature:getName())
+			else
+				logInfo("[BossDeath] Roll FAILED. No promotion scroll dropped for {}", creature:getName())
+			end
+		else
+			logWarn("[BossDeath] Could not determine promotion scroll for boss {}", creature:getName())
+		end
 
-		for _, con in ipairs(scores) do
+		for idx, con in ipairs(scores) do
 			-- Ignoring stamina for now because I heard you get receive rewards even when it's depleted
 			if con.score ~= 0 then
 				local reward, stamina, player
@@ -103,9 +295,19 @@ function bossDeath.onDeath(creature, corpse, killer, mostDamageKiller, lastHitUn
 				end
 
 				local playerLoot = creature:generateGemAtelierLoot()
-				playerLoot = monsterType:getBossReward(lootFactor, _ == 1, false, playerLoot, player)
+				playerLoot = monsterType:getBossReward(lootFactor, idx == 1, false, playerLoot, player)
 				for _ = 2, rolls do
 					playerLoot = monsterType:getBossReward(lootFactor, false, true, playerLoot, player)
+				end
+				
+				-- Add promotion scroll to this player's loot if it was rolled
+				if scrollRolled and scrollToAddToLoot then
+					if not playerLoot[scrollToAddToLoot] then
+						playerLoot[scrollToAddToLoot] = { count = 0 }
+					end
+					playerLoot[scrollToAddToLoot].count = playerLoot[scrollToAddToLoot].count + 1
+					logInfo("[BossDeath] Added {} scroll (ID: {}) to {} loot", 
+						promotionScrolls[scrollToAddToLoot].itemName, scrollToAddToLoot, player:getName())
 				end
 
 				-- Add droped items to reward container

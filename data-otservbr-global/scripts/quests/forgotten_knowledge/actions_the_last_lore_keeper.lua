@@ -3,7 +3,6 @@ local config = {
 		name = "The Last Lore Keeper",
 		position = Position(31987, 32839, 14),
 	},
-	timeToFightAgain = ParseDuration("14d") / 1000,
 	timeToDefeat = ParseDuration("17m") / 1000,
 	requiredLevel = 250,
 	playerPositions = {

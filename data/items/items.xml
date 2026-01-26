@@ -48764,7 +48764,8 @@ hands of its owner. Granted by TibiaRoyal.com"/>
 	<item id="25718" article="a" name="temple teleport scroll">
 		<attribute key="primarytype" value="tools"/>
 		<attribute key="description" value="You bought this item in the Store or gained it as a daily reward. This item cannot be traded."/>
-		<attribute key="charges" value="1"/>
+		<attribute key="stackable" value="1"/>
+		<attribute key="stacksize" value="100"/>
 		<attribute key="weight" value="120"/>
 	</item>
 	<item id="25719" article="a" name="temporary gold converter">

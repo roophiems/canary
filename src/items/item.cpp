@@ -1322,7 +1322,15 @@ Item::getDescriptions(const ItemType &it, const std::shared_ptr<Item> &item /*= 
 		} else {
 			std::string attackDescription;
 			if (it.abilities && it.abilities->elementType != COMBAT_NONE && it.abilities->elementDamage != 0) {
-				attackDescription = fmt::format("{} {}", it.abilities->elementDamage, getCombatName(it.abilities->elementType));
+				// Check for weapon leveling elemental bonus
+				int32_t totalElementDamage = it.abilities->elementDamage;
+				if (item) {
+					const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+					if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+						totalElementDamage += static_cast<int32_t>(elementalBonus->getAttribute<int64_t>());
+					}
+				}
+				attackDescription = fmt::format("{} {}", totalElementDamage, getCombatName(it.abilities->elementType));
 			}
 
 			if (attack != 0 && !attackDescription.empty()) {
@@ -1740,6 +1748,7 @@ Item::getDescriptions(const ItemType &it, const std::shared_ptr<Item> &item /*= 
 		} else {
 			std::string attackDescription;
 			if (it.abilities && it.abilities->elementType != COMBAT_NONE && it.abilities->elementDamage != 0) {
+				// For ItemType-only (no item instance), use base value
 				attackDescription = fmt::format("{} {}", it.abilities->elementDamage, getCombatName(it.abilities->elementType));
 			}
 
@@ -2832,11 +2841,22 @@ std::string Item::getDescription(const ItemType &it, int32_t lookDistance, const
 				s << " (Atk:" << attack;
 			}
 
-			if (it.abilities && it.abilities->elementType != COMBAT_NONE && it.abilities->elementDamage != 0 && !begin) {
-				s << " physical + " << it.abilities->elementDamage << ' ' << getCombatName(it.abilities->elementType);
-			} else if (it.abilities && it.abilities->elementType != COMBAT_NONE && it.abilities->elementDamage != 0 && begin) {
-				begin = false;
-				s << " (" << it.abilities->elementDamage << ' ' << getCombatName(it.abilities->elementType);
+			if (it.abilities && it.abilities->elementType != COMBAT_NONE && it.abilities->elementDamage != 0) {
+				// Check for weapon leveling elemental bonus
+				int32_t totalElementDamage = it.abilities->elementDamage;
+				if (item) {
+					const auto* elementalBonus = item->getCustomAttribute("weaponElementalBonus");
+					if (elementalBonus && elementalBonus->hasValue<int64_t>()) {
+						totalElementDamage += static_cast<int32_t>(elementalBonus->getAttribute<int64_t>());
+					}
+				}
+				
+				if (!begin) {
+					s << " physical + " << totalElementDamage << ' ' << getCombatName(it.abilities->elementType);
+				} else {
+					begin = false;
+					s << " (" << totalElementDamage << ' ' << getCombatName(it.abilities->elementType);
+				}
 			}
 
 			if (defense != 0 || extraDefense != 0 || it.isMissile()) {

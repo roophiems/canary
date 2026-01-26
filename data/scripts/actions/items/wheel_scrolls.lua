@@ -15,12 +15,41 @@ function scroll.onUse(player, item, fromPosition, target, toPosition, isHotkey)
 	end
 
 	local scrollData = promotionScrolls[item:getId()]
+	
+	-- Check current usage count
+	local scrollKv = player:kv():scoped("wheel-of-destiny"):scoped("scrolls")
+	local currentCount = 0
+	if scrollKv then
+		local scrollValue = scrollKv:get(scrollData.name)
+		if scrollValue then
+			if type(scrollValue) == "number" then
+				currentCount = scrollValue
+			elseif scrollValue == true then
+				currentCount = 1 -- Backward compatibility
+			end
+		end
+	end
+	
+	-- Check if player has reached the limit (10 uses)
+	if currentCount >= 10 then
+		player:sendTextMessage(MESSAGE_LOOK, "You have already deciphered this scroll 10 times. You cannot use it anymore.")
+		return true
+	end
+	
 	if not player:wheelUnlockScroll(scrollData.name) then
 		player:sendTextMessage(MESSAGE_LOOK, "You have already deciphered this scroll.")
 		return true
 	end
 
-	player:sendTextMessage(MESSAGE_LOOK, "You have gained " .. scrollData.points .. " promotion points for the Wheel of Destiny by deciphering the " .. scrollData.itemName .. ".")
+	local usesLeft = 10 - (currentCount + 1)
+	local message = "You have gained " .. scrollData.points .. " promotion points for the Wheel of Destiny by deciphering the " .. scrollData.itemName .. "."
+	if usesLeft > 0 then
+		message = message .. " You can use this scroll type " .. usesLeft .. " more times."
+	else
+		message = message .. " You have reached the maximum usage limit for this scroll type."
+	end
+	
+	player:sendTextMessage(MESSAGE_LOOK, message)
 	item:remove(1)
 	return true
 end

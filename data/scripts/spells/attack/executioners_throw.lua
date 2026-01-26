@@ -11,6 +11,43 @@ end
 
 combat:setCallback(CALLBACK_PARAM_SKILLVALUE, "onGetFormulaValues")
 
+function canChain(creature, target)
+	-- Always allow chaining to monsters
+	if target:isMonster() then
+		return true
+	end
+
+	-- For player targets, check secure mode and PVP conditions
+	if target:isPlayer() then
+		local casterPlayer = creature:getPlayer()
+		if not casterPlayer then
+			return false
+		end
+
+		-- Allow in PVP zones
+		if casterPlayer:getZoneType() == ZONE_PVP and target:getZoneType() == ZONE_PVP then
+			return true
+		end
+
+		-- Allow if target is marked (has skull)
+		local targetSkull = target:getSkull()
+		if targetSkull and targetSkull ~= SKULL_NONE then
+			return true
+		end
+
+		-- Block if secure mode is enabled
+		if casterPlayer:hasSecureMode() then
+			return false
+		end
+
+		return true
+	end
+
+	return false
+end
+
+combat:setCallback(CALLBACK_PARAM_CHAINPICKER, "canChain")
+
 function getChainValue(creature)
 	local grade = creature:revelationStageWOD("Executioner's Throw")
 	if grade == 0 then
